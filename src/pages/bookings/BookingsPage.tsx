@@ -1,0 +1,180 @@
+import { useState } from "react"
+import { useShopStore } from "@/store/shopStore"
+import { useShopBookings, useUpdateBookingStatus } from "@/hooks/useBookings"
+import type { BookingStatus } from "@/types/booking"
+import StatusBadge from "@/components/shared/StatusBadge"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Card, CardContent } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { toast } from "sonner"
+
+const STATUS_OPTIONS: (BookingStatus | "ALL")[] = [
+  "ALL",
+  "PENDING",
+  "ACCEPTED",
+  "COMPLETED",
+  "REJECTED",
+  "CANCELLED",
+]
+
+export default function BookingsPage() {
+  const shopId = useShopStore((s) => s.selectedShopId)
+  const [date, setDate] = useState("")
+  const [status, setStatus] = useState<BookingStatus | "ALL">("ALL")
+  const [page, setPage] = useState(0)
+
+  const { data, isLoading } = useShopBookings(shopId, {
+    date: date || undefined,
+    status: status === "ALL" ? undefined : status,
+    page,
+    size: 20,
+  })
+
+  const updateStatus = useUpdateBookingStatus(shopId)
+
+  const handleAction = async (bookingId: string, newStatus: BookingStatus) => {
+    try {
+      await updateStatus.mutateAsync({ bookingId, status: newStatus })
+      toast.success(`Booking ${newStatus.toLowerCase()}`)
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Failed to update booking")
+    }
+  }
+
+  return (
+    <div className="space-y-4 p-4 md:p-6">
+      <h1 className="text-lg font-semibold">Bookings</h1>
+
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <Input
+          type="date"
+          value={date}
+          onChange={(e) => {
+            setDate(e.target.value)
+            setPage(0)
+          }}
+          className="sm:w-44"
+        />
+        <Select
+          value={status}
+          onValueChange={(v) => {
+            setStatus(v as BookingStatus | "ALL")
+            setPage(0)
+          }}
+        >
+          <SelectTrigger className="sm:w-40">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {STATUS_OPTIONS.map((s) => (
+              <SelectItem key={s} value={s}>
+                {s}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {date && (
+          <Button variant="outline" size="sm" onClick={() => setDate("")}>
+            Clear date
+          </Button>
+        )}
+      </div>
+
+      {isLoading && (
+        <div className="space-y-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-24 w-full" />
+          ))}
+        </div>
+      )}
+
+      {!isLoading && data?.bookings.length === 0 && (
+        <p className="text-sm text-muted-foreground">No bookings found.</p>
+      )}
+
+      <div className="space-y-3">
+        {data?.bookings.map((b) => (
+          <Card key={b.id}>
+            <CardContent className="p-4">
+              <div className="flex items-start justify-between">
+                <div>
+                  <div className="font-medium">
+                    {b.guestName ?? "Registered Customer"}
+                    {b.guestPhone && (
+                      <span className="ml-2 text-sm text-muted-foreground">{b.guestPhone}</span>
+                    )}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {b.bookingDate} · {b.timeSlot}
+                  </div>
+                </div>
+                <StatusBadge status={b.status} />
+              </div>
+
+              <div className="mt-2 flex flex-wrap gap-1.5 text-sm">
+                {b.services.map((s) => (
+                  <span key={s.serviceId} className="rounded-md bg-muted px-2 py-0.5">
+                    {s.serviceName} · ₹{s.priceAtBooking}
+                  </span>
+                ))}
+              </div>
+
+              <div className="mt-2 flex items-center justify-between">
+                <span className="text-sm font-semibold">Total: ₹{b.totalAmount}</span>
+
+                <div className="flex gap-2">
+                  {b.status === "PENDING" && (
+                    <>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleAction(b.id, "REJECTED")}
+                      >
+                        Reject
+                      </Button>
+                      <Button size="sm" onClick={() => handleAction(b.id, "ACCEPTED")}>
+                        Accept
+                      </Button>
+                    </>
+                  )}
+                  {b.status === "ACCEPTED" && (
+                    <Button size="sm" onClick={() => handleAction(b.id, "COMPLETED")}>
+                      Mark Complete
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {data && data.totalPages > 1 && (
+        <div className="flex items-center justify-between pt-2">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page === 0}
+            onClick={() => setPage((p) => p - 1)}
+          >
+            Previous
+          </Button>
+          <span className="text-sm text-muted-foreground">
+            Page {page + 1} of {data.totalPages}
+          </span>
+          <Button variant="outline" size="sm" disabled={data.last} onClick={() => setPage((p) => p + 1)}>
+            Next
+          </Button>
+        </div>
+      )}
+    </div>
+  )
+}

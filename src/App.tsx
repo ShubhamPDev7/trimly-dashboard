@@ -7,6 +7,7 @@ import AppShell from "@/layouts/AppShell"
 import HoursPage from "@/pages/settings/HoursPage"
 import ServicesPage from "@/pages/services/ServicesPage"
 import StaffPage from "@/pages/staff/StaffPage"
+import BookingsPage from "@/pages/bookings/BookingsPage"
 
 function App() {
   return (
@@ -17,7 +18,7 @@ function App() {
         <Route element={<ProtectedRoute />}>
           <Route element={<AppShell />}>
             <Route path="/" element={<div className="p-6">Today placeholder</div>} />
-            <Route path="/bookings" element={<div className="p-6">Bookings placeholder</div>} />
+            <Route path="/bookings" element={<BookingsPage />} />
             <Route path="/queue" element={<div className="p-6">Queue placeholder</div>} />
             <Route path="/services" element={<ServicesPage />} />
             <Route path="/staff" element={<StaffPage />} />
