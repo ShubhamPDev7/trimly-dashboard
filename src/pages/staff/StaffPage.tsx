@@ -25,7 +25,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { toast } from "sonner"
-import { Trash2, Plus } from "lucide-react"
+import { Trash2, Plus, Clock } from "lucide-react"
+import StaffShiftDialog from "@/components/shared/StaffShiftDialog"
 
 export default function StaffPage() {
   const shopId = useShopStore((s) => s.selectedShopId)
@@ -37,6 +38,7 @@ export default function StaffPage() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [email, setEmail] = useState("")
   const [role, setRole] = useState<StaffRole>("STAFF")
+  const [shiftDialogStaff, setShiftDialogStaff] = useState<{ id: string; name: string } | null>(null)
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -139,6 +141,14 @@ export default function StaffPage() {
                 <Badge variant={s.roleInShop === "OWNER" ? "default" : "secondary"}>
                   {s.roleInShop}
                 </Badge>
+                
+                <button
+                  onClick={() => setShiftDialogStaff({ id: s.userId, name: s.name })}
+                  className="rounded-md p-1.5 text-muted-foreground hover:bg-muted"
+                >
+                  <Clock className="h-4 w-4" />
+                </button>
+
                 {s.userId !== currentUserId && (
                   <button
                     onClick={() => handleRemove(s.userId)}
@@ -152,6 +162,13 @@ export default function StaffPage() {
           </Card>
         ))}
       </div>
+
+      <StaffShiftDialog
+        staffUserId={shiftDialogStaff?.id ?? null}
+        staffName={shiftDialogStaff?.name ?? ""}
+        open={!!shiftDialogStaff}
+        onOpenChange={(open) => !open && setShiftDialogStaff(null)}
+      />
     </div>
   )
 }
