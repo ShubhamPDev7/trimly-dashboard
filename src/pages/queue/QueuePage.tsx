@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/select"
 import { toast } from "sonner"
 import { Plus } from "lucide-react"
+import ServiceRecordDialog from "@/components/shared/ServiceRecordDialog"
 
 export default function QueuePage() {
   const shopId = useShopStore((s) => s.selectedShopId)
@@ -64,6 +65,7 @@ export default function QueuePage() {
     total: number
   } | null>(null)
   const [paymentMode, setPaymentMode] = useState<PaymentMode>("CASH")
+  const [recordTarget, setRecordTarget] = useState<{ id: string; name: string | null } | null>(null)
 
   const toggleService = (id: string) => {
     setSelectedServiceIds((prev) =>
@@ -130,6 +132,7 @@ export default function QueuePage() {
         data: { paymentMode },
       })
       toast.success("Bill created")
+      setRecordTarget({ id: billEntry.id, name: billEntry.guestName })
       setBillEntry(null)
     } catch (err: any) {
       toast.error(err?.response?.data?.message || "Failed to create bill")
@@ -378,6 +381,12 @@ export default function QueuePage() {
           </div>
         </DialogContent>
       </Dialog>
+      <ServiceRecordDialog
+        open={!!recordTarget}
+        onOpenChange={(open) => !open && setRecordTarget(null)}
+        target={recordTarget ? { type: "walkin", id: recordTarget.id } : null}
+        customerName={recordTarget?.name}
+      />
     </div>
   )
 }

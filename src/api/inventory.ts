@@ -1,5 +1,5 @@
 import { apiClient } from "./client"
-import type { InventoryResponse, InventoryRequest } from "@/types/inventory"
+import type { InventoryResponse, InventoryRequest, InventoryUsageRequest } from "@/types/inventory"
 
 export const getInventory = async (shopId: string): Promise<InventoryResponse[]> => {
   const res = await apiClient.get<InventoryResponse[]>(`/shops/${shopId}/inventory`)
@@ -30,4 +30,12 @@ export const updateInventoryItem = async (
 
 export const deleteInventoryItem = async (shopId: string, itemId: string): Promise<void> => {
   await apiClient.delete(`/shops/${shopId}/inventory/${itemId}`)
+}
+
+export const recordInventoryUsage = async (
+  shopId: string,
+  serviceRecordId: string,
+  usages: InventoryUsageRequest[]
+): Promise<void> => {
+  await apiClient.post(`/shops/${shopId}/inventory/service-records/${serviceRecordId}/usage`, usages)
 }

@@ -25,6 +25,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import CreateBookingDialog from "@/components/shared/CreateBookingDialog"
+import ServiceRecordDialog from "@/components/shared/ServiceRecordDialog"
 
 const STATUS_OPTIONS: (BookingStatus | "ALL")[] = [
   "ALL",
@@ -44,6 +45,7 @@ export default function BookingsPage() {
   const billMutation = useCreateBookingBill(shopId)
 const [billBooking, setBillBooking] = useState<{ id: string; guestName: string | null; total: number } | null>(null)
 const [paymentMode, setPaymentMode] = useState<PaymentMode>("CASH")
+const [recordTarget, setRecordTarget] = useState<{ id: string; name: string | null } | null>(null)
 
   const { data, isLoading } = useShopBookings(shopId, {
     date: date || undefined,
@@ -75,6 +77,7 @@ const [paymentMode, setPaymentMode] = useState<PaymentMode>("CASH")
     try {
       await billMutation.mutateAsync({ bookingId: billBooking.id, data: { paymentMode } })
       toast.success("Bill created")
+      setRecordTarget({ id: billBooking.id, name: billBooking.guestName })
       setBillBooking(null)
       setPaymentMode("CASH")
     } catch (err: any) {
@@ -254,6 +257,12 @@ const [paymentMode, setPaymentMode] = useState<PaymentMode>("CASH")
     </div>
   </DialogContent>
 </Dialog>
+<ServiceRecordDialog
+        open={!!recordTarget}
+        onOpenChange={(open) => !open && setRecordTarget(null)}
+        target={recordTarget ? { type: "booking", id: recordTarget.id } : null}
+        customerName={recordTarget?.name}
+      />
       <CreateBookingDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} />
     </div>
   )

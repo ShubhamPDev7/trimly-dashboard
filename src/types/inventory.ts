@@ -20,3 +20,8 @@ export interface InventoryRequest {
   lowStockThreshold?: number
   costPerUnit?: number
 }
+
+export interface InventoryUsageRequest {
+  inventoryItemId: string
+  quantityUsed: number
+}
