@@ -25,8 +25,9 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { toast } from "sonner"
-import { Trash2, Plus, Clock } from "lucide-react"
+import { Trash2, Plus, Clock, UserCircle } from "lucide-react"
 import StaffShiftDialog from "@/components/shared/StaffShiftDialog"
+import BarberProfileDialog from "@/components/shared/BarberProfileDialog"
 
 export default function StaffPage() {
   const shopId = useShopStore((s) => s.selectedShopId)
@@ -38,6 +39,7 @@ export default function StaffPage() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [email, setEmail] = useState("")
   const [role, setRole] = useState<StaffRole>("STAFF")
+  const [profileDialogStaff, setProfileDialogStaff] = useState<{ id: string; name: string } | null>(null)
   const [shiftDialogStaff, setShiftDialogStaff] = useState<{ id: string; name: string } | null>(null)
 
   const handleAdd = async (e: React.FormEvent) => {
@@ -137,13 +139,23 @@ export default function StaffPage() {
                 <div className="font-medium">{s.name}</div>
                 <div className="text-sm text-muted-foreground">{s.email}</div>
               </div>
+              
               <div className="flex items-center gap-2">
                 <Badge variant={s.roleInShop === "OWNER" ? "default" : "secondary"}>
                   {s.roleInShop}
                 </Badge>
                 
                 <button
+                  onClick={() => setProfileDialogStaff({ id: s.userId, name: s.name })}
+                  title="Public Profile"
+                  className="rounded-md p-1.5 text-muted-foreground hover:bg-muted"
+                >
+                  <UserCircle className="h-4 w-4" />
+                </button>
+                
+                <button
                   onClick={() => setShiftDialogStaff({ id: s.userId, name: s.name })}
+                  title="Weekly Shifts"
                   className="rounded-md p-1.5 text-muted-foreground hover:bg-muted"
                 >
                   <Clock className="h-4 w-4" />
@@ -152,6 +164,7 @@ export default function StaffPage() {
                 {s.userId !== currentUserId && (
                   <button
                     onClick={() => handleRemove(s.userId)}
+                    title="Remove Staff"
                     className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-destructive"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -168,6 +181,13 @@ export default function StaffPage() {
         staffName={shiftDialogStaff?.name ?? ""}
         open={!!shiftDialogStaff}
         onOpenChange={(open) => !open && setShiftDialogStaff(null)}
+      />
+
+      <BarberProfileDialog
+        staffUserId={profileDialogStaff?.id ?? null}
+        staffName={profileDialogStaff?.name ?? ""}
+        open={!!profileDialogStaff}
+        onOpenChange={(open) => !open && setProfileDialogStaff(null)}
       />
     </div>
   )
