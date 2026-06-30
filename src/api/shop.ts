@@ -4,6 +4,7 @@ import type {
   ShopRequest,
   ShopStaffResponse,
   ShopPublicProfileResponse,
+  ShopUpdateRequest,
 } from "@/types/shop"
 
 export const createShop = async (data: ShopRequest): Promise<ShopResponse> => {
@@ -33,4 +34,12 @@ export const addStaff = async (
 
 export const removeStaff = async (shopId: string, staffUserId: string): Promise<void> => {
   await apiClient.delete(`/shops/${shopId}/staff/${staffUserId}`)
+}
+
+export const updateShop = async (
+  shopId: string,
+  data: ShopUpdateRequest
+): Promise<ShopResponse> => {
+  const res = await apiClient.put<ShopResponse>(`/shops/${shopId}`, data)
+  return res.data
 }

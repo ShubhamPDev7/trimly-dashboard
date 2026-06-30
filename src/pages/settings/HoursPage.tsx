@@ -12,6 +12,8 @@ import {
   useUpsertCancellationPolicy,
   useDeleteCancellationPolicy,
 } from "@/hooks/usePolicy"
+import { useShopProfile } from "@/hooks/useShopProfile"
+import { useUpdateShop } from "@/hooks/useShop"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -30,6 +32,9 @@ interface DayRow {
 
 export default function HoursPage() {
   const shopId = useShopStore((s) => s.selectedShopId)
+  const { data: shopProfile } = useShopProfile()
+const updateShopMutation = useUpdateShop(shopId)
+const [profileForm, setProfileForm] = useState({ name: "", address: "", locality: "", timezone: "Asia/Kolkata" })
   const { data: hours, isLoading } = useShopHours(shopId)
   const setHours = useSetShopHours(shopId)
 
@@ -64,6 +69,17 @@ export default function HoursPage() {
     if (policy) setMinHours(String(policy.minHoursBeforeCancel))
   }, [policy])
 
+  useEffect(() => {
+  if (shopProfile) {
+    setProfileForm({
+      name: shopProfile.name,
+      address: shopProfile.address ?? "",
+      locality: shopProfile.locality ?? "",
+      timezone: shopProfile.timezone,
+    })
+  }
+}, [shopProfile])
+
   const updateRow = (dayOfWeek: number, patch: Partial<DayRow>) => {
     setRows((prev) => prev.map((r) => (r.dayOfWeek === dayOfWeek ? { ...r, ...patch } : r)))
   }
@@ -97,6 +113,16 @@ export default function HoursPage() {
       toast.error(err?.response?.data?.message || "Failed to add closed date")
     }
   }
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+  e.preventDefault()
+  try {
+    await updateShopMutation.mutateAsync(profileForm)
+    toast.success("Shop profile updated")
+  } catch (err: any) {
+    toast.error(err?.response?.data?.message || "Failed to update shop profile")
+  }
+}
 
   const handleSavePolicy = async () => {
     const hoursNum = Number(minHours)
@@ -136,6 +162,54 @@ export default function HoursPage() {
 
   return (
     <div className="space-y-6 p-4 md:p-6">
+
+      <Card>
+  <CardHeader>
+    <CardTitle>Shop Profile</CardTitle>
+  </CardHeader>
+  <CardContent>
+    <form onSubmit={handleSaveProfile} className="space-y-4">
+      <div className="space-y-2">
+        <label className="text-sm font-medium">Shop Name</label>
+        <Input
+          value={profileForm.name}
+          onChange={(e) => setProfileForm((f) => ({ ...f, name: e.target.value }))}
+          required
+        />
+      </div>
+      <div className="space-y-2">
+        <label className="text-sm font-medium">Address</label>
+        <Input
+          value={profileForm.address}
+          onChange={(e) => setProfileForm((f) => ({ ...f, address: e.target.value }))}
+          required
+        />
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Locality</label>
+          <Input
+            value={profileForm.locality}
+            onChange={(e) => setProfileForm((f) => ({ ...f, locality: e.target.value }))}
+            required
+          />
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Timezone</label>
+          <Input
+            value={profileForm.timezone}
+            onChange={(e) => setProfileForm((f) => ({ ...f, timezone: e.target.value }))}
+            required
+          />
+        </div>
+      </div>
+      <Button type="submit" disabled={updateShopMutation.isPending} className="w-full sm:w-auto">
+        {updateShopMutation.isPending ? "Saving..." : "Save Shop Profile"}
+      </Button>
+    </form>
+  </CardContent>
+</Card>
+
       <Card>
         <CardHeader>
           <CardTitle>Shop Hours</CardTitle>
