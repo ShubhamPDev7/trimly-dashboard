@@ -9,6 +9,7 @@ import ServicesPage from "@/pages/services/ServicesPage"
 import StaffPage from "@/pages/staff/StaffPage"
 import BookingsPage from "@/pages/bookings/BookingsPage"
 import QueuePage from "@/pages/queue/QueuePage"
+import InventoryPage from "@/pages/inventory/InventoryPage"
 
 function App() {
   return (
@@ -23,7 +24,7 @@ function App() {
             <Route path="/queue" element={<QueuePage />} />
             <Route path="/services" element={<ServicesPage />} />
             <Route path="/staff" element={<StaffPage />} />
-            <Route path="/inventory" element={<div className="p-6">Inventory placeholder</div>} />
+            <Route path="/inventory" element={<InventoryPage />} />
             <Route path="/reviews" element={<div className="p-6">Reviews placeholder</div>} />
             <Route path="/settings" element={<HoursPage />} />
           </Route>
