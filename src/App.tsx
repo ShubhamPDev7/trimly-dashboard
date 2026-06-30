@@ -8,6 +8,7 @@ import HoursPage from "@/pages/settings/HoursPage"
 import ServicesPage from "@/pages/services/ServicesPage"
 import StaffPage from "@/pages/staff/StaffPage"
 import BookingsPage from "@/pages/bookings/BookingsPage"
+import QueuePage from "@/pages/queue/QueuePage"
 
 function App() {
   return (
@@ -19,7 +20,7 @@ function App() {
           <Route element={<AppShell />}>
             <Route path="/" element={<div className="p-6">Today placeholder</div>} />
             <Route path="/bookings" element={<BookingsPage />} />
-            <Route path="/queue" element={<div className="p-6">Queue placeholder</div>} />
+            <Route path="/queue" element={<QueuePage />} />
             <Route path="/services" element={<ServicesPage />} />
             <Route path="/staff" element={<StaffPage />} />
             <Route path="/inventory" element={<div className="p-6">Inventory placeholder</div>} />
