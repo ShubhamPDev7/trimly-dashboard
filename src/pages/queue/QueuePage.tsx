@@ -9,7 +9,9 @@ import {
   useCompleteQueueEntry,
   useCancelQueueEntry,
   useMarkNoShow,
+  useCreateWalkInBill,
 } from "@/hooks/useWalkInQueue"
+import type { PaymentMode } from "@/types/bill"
 import StatusBadge from "@/components/shared/StatusBadge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -45,6 +47,7 @@ export default function QueuePage() {
   const completeMutation = useCompleteQueueEntry(shopId)
   const cancelMutation = useCancelQueueEntry(shopId)
   const noShowMutation = useMarkNoShow(shopId)
+  const billMutation = useCreateWalkInBill(shopId)
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [guestName, setGuestName] = useState("")
@@ -54,6 +57,13 @@ export default function QueuePage() {
 
   const [startDialogEntryId, setStartDialogEntryId] = useState<string | null>(null)
   const [startStaffId, setStartStaffId] = useState<string>("")
+
+  const [billEntry, setBillEntry] = useState<{
+    id: string
+    guestName: string | null
+    total: number
+  } | null>(null)
+  const [paymentMode, setPaymentMode] = useState<PaymentMode>("CASH")
 
   const toggleService = (id: string) => {
     setSelectedServiceIds((prev) =>
@@ -102,10 +112,27 @@ export default function QueuePage() {
 
   const handleComplete = async (entryId: string) => {
     try {
-      await completeMutation.mutateAsync(entryId)
+      const updated = await completeMutation.mutateAsync(entryId)
       toast.success("Marked complete")
+      const total = updated.services.reduce((sum, s) => sum + s.priceAtJoin, 0)
+      setBillEntry({ id: entryId, guestName: updated.guestName, total })
+      setPaymentMode("CASH")
     } catch (err: any) {
       toast.error(err?.response?.data?.message || "Failed to complete")
+    }
+  }
+
+  const handleCreateBill = async () => {
+    if (!billEntry) return
+    try {
+      await billMutation.mutateAsync({
+        entryId: billEntry.id,
+        data: { paymentMode },
+      })
+      toast.success("Bill created")
+      setBillEntry(null)
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Failed to create bill")
     }
   }
 
@@ -300,6 +327,53 @@ export default function QueuePage() {
               className="w-full"
             >
               {startMutation.isPending ? "Starting..." : "Start Service"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={!!billEntry} onOpenChange={(open) => !open && setBillEntry(null)}>
+        <DialogContent
+          onInteractOutside={(e) => e.preventDefault()}
+          onEscapeKeyDown={(e) => e.preventDefault()}
+        >
+          <DialogHeader>
+            <DialogTitle>Create Bill{billEntry?.guestName ? ` — ${billEntry.guestName}` : ""}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="rounded-md bg-muted p-3 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Total amount</span>
+                <span className="font-semibold">₹{billEntry?.total ?? 0}</span>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Payment Mode</Label>
+              <Select value={paymentMode} onValueChange={(v) => setPaymentMode(v as PaymentMode)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="CASH">Cash</SelectItem>
+                  <SelectItem value="UPI">UPI</SelectItem>
+                  <SelectItem value="ONLINE">Online</SelectItem>
+                  <SelectItem value="RAZORPAY">Razorpay</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button
+              onClick={handleCreateBill}
+              disabled={billMutation.isPending}
+              className="w-full"
+            >
+              {billMutation.isPending ? "Saving..." : "Create Bill"}
+            </Button>
+            <Button
+              variant="ghost"
+              className="w-full"
+              disabled={billMutation.isPending}
+              onClick={() => setBillEntry(null)}
+            >
+              Bill later
             </Button>
           </div>
         </DialogContent>

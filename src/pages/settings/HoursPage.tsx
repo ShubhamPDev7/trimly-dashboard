@@ -7,6 +7,11 @@ import {
   useAddClosedDate,
   useRemoveClosedDate,
 } from "@/hooks/useShopHours"
+import {
+  useCancellationPolicy,
+  useUpsertCancellationPolicy,
+  useDeleteCancellationPolicy,
+} from "@/hooks/usePolicy"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -32,6 +37,11 @@ export default function HoursPage() {
   const addClosed = useAddClosedDate(shopId)
   const removeClosed = useRemoveClosedDate(shopId)
 
+  const { data: policy, isLoading: policyLoading } = useCancellationPolicy(shopId)
+  const upsertPolicy = useUpsertCancellationPolicy(shopId)
+  const deletePolicy = useDeleteCancellationPolicy(shopId)
+  const [minHours, setMinHours] = useState("24")
+
   const [rows, setRows] = useState<DayRow[]>([])
   const [newDate, setNewDate] = useState("")
   const [newReason, setNewReason] = useState("")
@@ -49,6 +59,10 @@ export default function HoursPage() {
     }
     setRows(initial)
   }, [hours])
+
+  useEffect(() => {
+    if (policy) setMinHours(String(policy.minHoursBeforeCancel))
+  }, [policy])
 
   const updateRow = (dayOfWeek: number, patch: Partial<DayRow>) => {
     setRows((prev) => prev.map((r) => (r.dayOfWeek === dayOfWeek ? { ...r, ...patch } : r)))
@@ -81,6 +95,32 @@ export default function HoursPage() {
       toast.success("Closed date added")
     } catch (err: any) {
       toast.error(err?.response?.data?.message || "Failed to add closed date")
+    }
+  }
+
+  const handleSavePolicy = async () => {
+    const hoursNum = Number(minHours)
+    if (!hoursNum || hoursNum < 1) {
+      toast.error("Enter at least 1 hour")
+      return
+    }
+    try {
+      await upsertPolicy.mutateAsync({ minHoursBeforeCancel: hoursNum })
+      toast.success("Cancellation policy saved")
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Failed to save policy")
+    }
+  }
+
+  const handleRemovePolicy = async () => {
+    if (!confirm("Remove the cancellation policy? Customers will be able to cancel anytime."))
+      return
+    try {
+      await deletePolicy.mutateAsync()
+      setMinHours("24")
+      toast.success("Cancellation policy removed")
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Failed to remove policy")
     }
   }
 
@@ -179,6 +219,50 @@ export default function HoursPage() {
               </div>
             ))}
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Cancellation Policy</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {policyLoading ? (
+            <Skeleton className="h-10 w-full" />
+          ) : (
+            <>
+              {policy && (
+                <p className="text-sm text-muted-foreground">{policy.description}</p>
+              )}
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <label className="flex items-center gap-2 text-sm">
+                  Customers must cancel at least
+                  <Input
+                    type="number"
+                    min={1}
+                    value={minHours}
+                    onChange={(e) => setMinHours(e.target.value)}
+                    className="w-20"
+                  />
+                  hour(s) before their appointment.
+                </label>
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={handleSavePolicy} disabled={upsertPolicy.isPending}>
+                  {upsertPolicy.isPending ? "Saving..." : "Save Policy"}
+                </Button>
+                {policy && (
+                  <Button
+                    variant="outline"
+                    onClick={handleRemovePolicy}
+                    disabled={deletePolicy.isPending}
+                  >
+                    Remove Policy
+                  </Button>
+                )}
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
     </div>

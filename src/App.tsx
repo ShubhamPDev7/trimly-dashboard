@@ -10,6 +10,11 @@ import StaffPage from "@/pages/staff/StaffPage"
 import BookingsPage from "@/pages/bookings/BookingsPage"
 import QueuePage from "@/pages/queue/QueuePage"
 import InventoryPage from "@/pages/inventory/InventoryPage"
+import ReviewsPage from "@/pages/reviews/ReviewsPage"
+import TodayPage from "@/pages/dashboard/TodayPage"
+import SubscriptionPage from "@/pages/subscription/SubscriptionPage"
+
+
 
 function App() {
   return (
@@ -19,14 +24,15 @@ function App() {
         <Route path="/onboarding" element={<CreateShopPage />} />
         <Route element={<ProtectedRoute />}>
           <Route element={<AppShell />}>
-            <Route path="/" element={<div className="p-6">Today placeholder</div>} />
+            <Route path="/" element={<TodayPage />} />
             <Route path="/bookings" element={<BookingsPage />} />
             <Route path="/queue" element={<QueuePage />} />
             <Route path="/services" element={<ServicesPage />} />
             <Route path="/staff" element={<StaffPage />} />
             <Route path="/inventory" element={<InventoryPage />} />
-            <Route path="/reviews" element={<div className="p-6">Reviews placeholder</div>} />
+            <Route path="/reviews" element={<ReviewsPage />} />
             <Route path="/settings" element={<HoursPage />} />
+            <Route path="/subscription" element={<SubscriptionPage />} />
           </Route>
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />

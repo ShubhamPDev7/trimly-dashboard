@@ -8,6 +8,7 @@ import {
   Boxes,
   Star,
   Settings,
+  CreditCard,
   LogOut,
 } from "lucide-react"
 import { useAuthStore } from "@/store/authStore"
@@ -23,6 +24,7 @@ const navItems = [
   { to: "/staff", label: "Staff", icon: Users },
   { to: "/inventory", label: "Inventory", icon: Boxes },
   { to: "/reviews", label: "Reviews", icon: Star },
+  { to: "/subscription", label: "Subscription", icon: CreditCard },
   { to: "/settings", label: "Settings", icon: Settings },
 ]
 

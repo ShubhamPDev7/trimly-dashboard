@@ -1,5 +1,6 @@
 import { apiClient } from "./client"
 import type { WalkInQueueEntryResponse, WalkInJoinRequest, WalkInStartRequest } from "@/types/walkin"
+import type { BillRequest, BillResponse } from "@/types/bill"
 
 export const joinQueue = async (
   shopId: string,
@@ -11,6 +12,24 @@ export const joinQueue = async (
 
 export const listQueue = async (shopId: string): Promise<WalkInQueueEntryResponse[]> => {
   const res = await apiClient.get<WalkInQueueEntryResponse[]>(`/shops/${shopId}/walk-in-queue`)
+  return res.data
+}
+
+export const getQueueHistory = async (
+  shopId: string,
+  page = 0,
+  size = 20
+): Promise<{
+  content: WalkInQueueEntryResponse[]
+  totalElements: number
+  totalPages: number
+  number: number
+  first: boolean
+  last: boolean
+}> => {
+  const res = await apiClient.get(`/shops/${shopId}/walk-in-queue/history`, {
+    params: { page, size },
+  })
   return res.data
 }
 
@@ -52,6 +71,18 @@ export const markNoShow = async (
 ): Promise<WalkInQueueEntryResponse> => {
   const res = await apiClient.patch<WalkInQueueEntryResponse>(
     `/shops/${shopId}/walk-in-queue/${entryId}/no-show`
+  )
+  return res.data
+}
+
+export const createWalkInBill = async (
+  shopId: string,
+  entryId: string,
+  data: BillRequest
+): Promise<BillResponse> => {
+  const res = await apiClient.post<BillResponse>(
+    `/shops/${shopId}/walk-in-queue/${entryId}/bill`,
+    data
   )
   return res.data
 }
