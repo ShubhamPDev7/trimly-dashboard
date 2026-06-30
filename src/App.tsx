@@ -13,6 +13,7 @@ import InventoryPage from "@/pages/inventory/InventoryPage"
 import ReviewsPage from "@/pages/reviews/ReviewsPage"
 import TodayPage from "@/pages/dashboard/TodayPage"
 import SubscriptionPage from "@/pages/subscription/SubscriptionPage"
+import AnalyticsPage from "@/pages/dashboard/AnalyticsPage"
 
 
 
@@ -33,6 +34,7 @@ function App() {
             <Route path="/reviews" element={<ReviewsPage />} />
             <Route path="/settings" element={<HoursPage />} />
             <Route path="/subscription" element={<SubscriptionPage />} />
+            <Route path="/analytics" element={<AnalyticsPage />} />
           </Route>
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />

@@ -2,6 +2,7 @@ import { useEffect } from "react"
 import { Outlet, NavLink } from "react-router-dom"
 import {
   LayoutDashboard,
+  BarChart3,
   CalendarClock,
   Users,
   Scissors,
@@ -18,6 +19,7 @@ import { cn } from "@/lib/utils"
 
 const navItems = [
   { to: "/", label: "Today", icon: LayoutDashboard },
+  { to: "/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/bookings", label: "Bookings", icon: CalendarClock },
   { to: "/queue", label: "Queue", icon: Users },
   { to: "/services", label: "Services", icon: Scissors },
