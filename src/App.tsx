@@ -6,6 +6,7 @@ import ProtectedRoute from "@/components/shared/ProtectedRoute"
 import AppShell from "@/layouts/AppShell"
 import HoursPage from "@/pages/settings/HoursPage"
 import ServicesPage from "@/pages/services/ServicesPage"
+import StaffPage from "@/pages/staff/StaffPage"
 
 function App() {
   return (
@@ -19,7 +20,7 @@ function App() {
             <Route path="/bookings" element={<div className="p-6">Bookings placeholder</div>} />
             <Route path="/queue" element={<div className="p-6">Queue placeholder</div>} />
             <Route path="/services" element={<ServicesPage />} />
-            <Route path="/staff" element={<div className="p-6">Staff placeholder</div>} />
+            <Route path="/staff" element={<StaffPage />} />
             <Route path="/inventory" element={<div className="p-6">Inventory placeholder</div>} />
             <Route path="/reviews" element={<div className="p-6">Reviews placeholder</div>} />
             <Route path="/settings" element={<HoursPage />} />

@@ -22,3 +22,15 @@ export const getShopPublicProfile = async (
   const res = await apiClient.get<ShopPublicProfileResponse>(`/shops/${shopId}/public`)
   return res.data
 }
+
+export const addStaff = async (
+  shopId: string,
+  data: { email: string; roleInShop: "OWNER" | "STAFF" }
+): Promise<ShopStaffResponse> => {
+  const res = await apiClient.post<ShopStaffResponse>(`/shops/${shopId}/staff`, data)
+  return res.data
+}
+
+export const removeStaff = async (shopId: string, staffUserId: string): Promise<void> => {
+  await apiClient.delete(`/shops/${shopId}/staff/${staffUserId}`)
+}
