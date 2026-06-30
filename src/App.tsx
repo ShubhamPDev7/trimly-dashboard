@@ -1,0 +1,33 @@
+import { Routes, Route, Navigate } from "react-router-dom"
+import { Toaster } from "@/components/ui/sonner"
+import LoginPage from "@/pages/auth/LoginPage"
+import CreateShopPage from "@/pages/auth/CreateShopPage"
+import ProtectedRoute from "@/components/shared/ProtectedRoute"
+import AppShell from "@/layouts/AppShell"
+
+function App() {
+  return (
+    <>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/onboarding" element={<CreateShopPage />} />
+        <Route element={<ProtectedRoute />}>
+          <Route element={<AppShell />}>
+            <Route path="/" element={<div className="p-6">Today placeholder</div>} />
+            <Route path="/bookings" element={<div className="p-6">Bookings placeholder</div>} />
+            <Route path="/queue" element={<div className="p-6">Queue placeholder</div>} />
+            <Route path="/services" element={<div className="p-6">Services placeholder</div>} />
+            <Route path="/staff" element={<div className="p-6">Staff placeholder</div>} />
+            <Route path="/inventory" element={<div className="p-6">Inventory placeholder</div>} />
+            <Route path="/reviews" element={<div className="p-6">Reviews placeholder</div>} />
+            <Route path="/settings" element={<div className="p-6">Settings placeholder</div>} />
+          </Route>
+        </Route>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+      <Toaster richColors position="top-center" />
+    </>
+  )
+}
+
+export default App
