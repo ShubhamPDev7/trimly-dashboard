@@ -5,7 +5,9 @@ import type {
   BookingStatusUpdateRequest,
   BookingStatus,
   BookingRequest,
+  AvailableSlotsResponse,
 } from "@/types/booking"
+import type { BillRequest, BillResponse } from "@/types/bill"
 
 export const listShopBookings = async (
   shopId: string,
@@ -39,5 +41,29 @@ export const createBooking = async (
   data: BookingRequest
 ): Promise<BookingResponse> => {
   const res = await apiClient.post<BookingResponse>(`/shops/${shopId}/bookings`, data)
+  return res.data
+}
+
+export const getAvailableSlots = async (
+  shopId: string,
+  date: string,
+  staffId: string
+): Promise<AvailableSlotsResponse> => {
+  const res = await apiClient.get<AvailableSlotsResponse>(
+    `/shops/${shopId}/bookings/available-slots`,
+    { params: { date, staffId } }
+  )
+  return res.data
+}
+
+export const createBookingBill = async (
+  shopId: string,
+  bookingId: string,
+  data: BillRequest
+): Promise<BillResponse> => {
+  const res = await apiClient.post<BillResponse>(
+    `/shops/${shopId}/bookings/${bookingId}/bill`,
+    data
+  )
   return res.data
 }

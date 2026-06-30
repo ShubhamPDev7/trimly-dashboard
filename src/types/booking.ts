@@ -42,3 +42,11 @@ export interface BookingRequest {
   guestName?: string
   guestPhone?: string
 }
+
+export interface AvailableSlotsResponse {
+  shopId: string
+  staffId: string
+  date: string
+  slotIntervalMinutes: number
+  availableSlots: string[]
+}

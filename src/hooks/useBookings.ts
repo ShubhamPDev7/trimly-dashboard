@@ -4,8 +4,11 @@ import {
   updateBookingStatus,
   cancelBooking,
   createBooking,
+  getAvailableSlots,
+  createBookingBill,
 } from "@/api/bookings"
 import type { BookingStatus, BookingRequest } from "@/types/booking"
+import type { BillRequest } from "@/types/bill"
 
 export function useShopBookings(
   shopId: string | null,
@@ -43,6 +46,25 @@ export function useCreateBooking(shopId: string | null) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (data: BookingRequest) => createBooking(shopId!, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["bookings", shopId] })
+    },
+  })
+}
+
+export function useAvailableSlots(shopId: string | null, date: string, staffId: string) {
+  return useQuery({
+    queryKey: ["available-slots", shopId, date, staffId],
+    queryFn: () => getAvailableSlots(shopId!, date, staffId),
+    enabled: !!shopId && !!date && !!staffId,
+  })
+}
+
+export function useCreateBookingBill(shopId: string | null) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ bookingId, data }: { bookingId: string; data: BillRequest }) =>
+      createBookingBill(shopId!, bookingId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["bookings", shopId] })
     },

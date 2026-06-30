@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { useShopStore } from "@/store/shopStore"
-import { useShopBookings, useUpdateBookingStatus } from "@/hooks/useBookings"
+import { useShopBookings, useUpdateBookingStatus, useCreateBookingBill } from "@/hooks/useBookings"
 import type { BookingStatus } from "@/types/booking"
 import StatusBadge from "@/components/shared/StatusBadge"
 import { Button } from "@/components/ui/button"
@@ -15,6 +15,16 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { toast } from "sonner"
+import { Plus } from "lucide-react"
+import type { PaymentMode } from "@/types/bill"
+import { Label } from "@/components/ui/label"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import CreateBookingDialog from "@/components/shared/CreateBookingDialog"
 
 const STATUS_OPTIONS: (BookingStatus | "ALL")[] = [
   "ALL",
@@ -30,6 +40,10 @@ export default function BookingsPage() {
   const [date, setDate] = useState("")
   const [status, setStatus] = useState<BookingStatus | "ALL">("ALL")
   const [page, setPage] = useState(0)
+  const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const billMutation = useCreateBookingBill(shopId)
+const [billBooking, setBillBooking] = useState<{ id: string; guestName: string | null; total: number } | null>(null)
+const [paymentMode, setPaymentMode] = useState<PaymentMode>("CASH")
 
   const { data, isLoading } = useShopBookings(shopId, {
     date: date || undefined,
@@ -39,19 +53,44 @@ export default function BookingsPage() {
   })
 
   const updateStatus = useUpdateBookingStatus(shopId)
+  const isBookingTimePassed = (bookingDate: string, timeSlot: string) => {
+    const bookingDateTime = new Date(`${bookingDate}T${timeSlot}`)
+    return bookingDateTime.getTime() <= Date.now()
+  }
 
-  const handleAction = async (bookingId: string, newStatus: BookingStatus) => {
+  const handleAction = async (booking: { id: string; guestName: string | null; totalAmount: number }, newStatus: BookingStatus) => {
     try {
-      await updateStatus.mutateAsync({ bookingId, status: newStatus })
+      await updateStatus.mutateAsync({ bookingId: booking.id, status: newStatus })
       toast.success(`Booking ${newStatus.toLowerCase()}`)
+      if (newStatus === "COMPLETED") {
+        setBillBooking({ id: booking.id, guestName: booking.guestName, total: booking.totalAmount })
+      }
     } catch (err: any) {
       toast.error(err?.response?.data?.message || "Failed to update booking")
     }
   }
 
+  const handleCreateBill = async () => {
+    if (!billBooking) return
+    try {
+      await billMutation.mutateAsync({ bookingId: billBooking.id, data: { paymentMode } })
+      toast.success("Bill created")
+      setBillBooking(null)
+      setPaymentMode("CASH")
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Failed to create bill")
+    }
+  }
+
   return (
     <div className="space-y-4 p-4 md:p-6">
-      <h1 className="text-lg font-semibold">Bookings</h1>
+      <div className="flex items-center justify-between">
+  <h1 className="text-lg font-semibold">Bookings</h1>
+  <Button size="sm" onClick={() => setCreateDialogOpen(true)}>
+    <Plus className="mr-1 h-4 w-4" />
+    New Booking
+  </Button>
+</div>
 
       <div className="flex flex-col gap-2 sm:flex-row">
         <Input
@@ -136,19 +175,25 @@ export default function BookingsPage() {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => handleAction(b.id, "REJECTED")}
+                        onClick={() => handleAction(b, "REJECTED")}
                       >
                         Reject
                       </Button>
-                      <Button size="sm" onClick={() => handleAction(b.id, "ACCEPTED")}>
+                      <Button size="sm" onClick={() => handleAction(b, "ACCEPTED")}>
                         Accept
                       </Button>
                     </>
                   )}
                   {b.status === "ACCEPTED" && (
-                    <Button size="sm" onClick={() => handleAction(b.id, "COMPLETED")}>
-                      Mark Complete
-                    </Button>
+                    isBookingTimePassed(b.bookingDate, b.timeSlot) ? (
+                      <Button size="sm" onClick={() => handleAction(b, "COMPLETED")}>
+                        Mark Complete
+                      </Button>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">
+                        Available after {b.timeSlot.slice(0, 5)} on {b.bookingDate}
+                      </span>
+                    )
                   )}
                 </div>
               </div>
@@ -175,6 +220,41 @@ export default function BookingsPage() {
           </Button>
         </div>
       )}
+      <Dialog open={!!billBooking} onOpenChange={(open) => !open && setBillBooking(null)}>
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle>
+        Create Bill{billBooking?.guestName ? ` — ${billBooking.guestName}` : ""}
+      </DialogTitle>
+    </DialogHeader>
+    <div className="space-y-4">
+      <div className="rounded-md bg-muted p-3 text-sm">
+        <div className="flex justify-between">
+          <span className="text-muted-foreground">Total amount</span>
+          <span className="font-semibold">₹{billBooking?.total ?? 0}</span>
+        </div>
+      </div>
+      <div className="space-y-2">
+        <Label>Payment Mode</Label>
+        <Select value={paymentMode} onValueChange={(v) => setPaymentMode(v as PaymentMode)}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="CASH">Cash</SelectItem>
+            <SelectItem value="UPI">UPI</SelectItem>
+            <SelectItem value="ONLINE">Online</SelectItem>
+            <SelectItem value="RAZORPAY">Razorpay</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <Button onClick={handleCreateBill} disabled={billMutation.isPending} className="w-full">
+        {billMutation.isPending ? "Saving..." : "Create Bill"}
+      </Button>
+    </div>
+  </DialogContent>
+</Dialog>
+      <CreateBookingDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} />
     </div>
   )
 }
