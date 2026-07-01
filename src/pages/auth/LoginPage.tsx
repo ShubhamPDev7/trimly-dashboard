@@ -2,7 +2,14 @@ import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import { Eye, EyeOff, Scissors } from "lucide-react"
-import { loginRequest, registerRequest } from "@/api/auth"
+import { loginRequest, registerRequest, forgotPasswordRequest } from "@/api/auth"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog"
 import { useAuthStore } from "@/store/authStore"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -23,6 +30,10 @@ export default function LoginPage() {
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [forgotOpen, setForgotOpen] = useState(false)
+const [forgotEmail, setForgotEmail] = useState("")
+const [forgotLoading, setForgotLoading] = useState(false)
+const [forgotSent, setForgotSent] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -49,6 +60,19 @@ export default function LoginPage() {
       )
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setForgotLoading(true)
+    try {
+      await forgotPasswordRequest({ email: forgotEmail })
+      setForgotSent(true)
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Failed to send reset link")
+    } finally {
+      setForgotLoading(false)
     }
   }
 
@@ -181,6 +205,19 @@ export default function LoginPage() {
                     ? "Sign In"
                     : "Create Account"}
               </Button>
+              {mode === "signin" && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setForgotOpen(true)
+                    setForgotSent(false)
+                    setForgotEmail(email)
+                  }}
+                  className="w-full text-center text-xs text-muted-foreground hover:text-foreground hover:underline"
+                >
+                  Forgot password?
+                </button>
+              )}
             </motion.form>
           </AnimatePresence>
         </div>
@@ -189,6 +226,39 @@ export default function LoginPage() {
           Trimly Dashboard for shop owners &amp; staff
         </p>
       </motion.div>
+      <Dialog open={forgotOpen} onOpenChange={setForgotOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reset your password</DialogTitle>
+            <DialogDescription>
+              {forgotSent
+                ? "Check your email for a link to reset your password."
+                : "Enter your account email and we'll send you a reset link."}
+            </DialogDescription>
+          </DialogHeader>
+          {!forgotSent ? (
+            <form onSubmit={handleForgotPassword} className="space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="forgotEmail">Email</Label>
+                <Input
+                  id="forgotEmail"
+                  type="email"
+                  value={forgotEmail}
+                  onChange={(e) => setForgotEmail(e.target.value)}
+                  required
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={forgotLoading}>
+                {forgotLoading ? "Sending..." : "Send Reset Link"}
+              </Button>
+            </form>
+          ) : (
+            <Button className="w-full" onClick={() => setForgotOpen(false)}>
+              Got it
+            </Button>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

@@ -29,3 +29,4 @@ export const resetPasswordRequest = async (
   const res = await apiClient.post<MessageResponse>("/auth/reset-password", data)
   return res.data
 }
+

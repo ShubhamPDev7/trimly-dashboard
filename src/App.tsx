@@ -14,6 +14,7 @@ import ReviewsPage from "@/pages/reviews/ReviewsPage"
 import TodayPage from "@/pages/dashboard/TodayPage"
 import SubscriptionPage from "@/pages/subscription/SubscriptionPage"
 import AnalyticsPage from "@/pages/dashboard/AnalyticsPage"
+import ResetPasswordPage from "@/pages/auth/ResetPasswordPage"
 
 
 
@@ -22,6 +23,7 @@ function App() {
     <>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/onboarding" element={<CreateShopPage />} />
         <Route element={<ProtectedRoute />}>
           <Route element={<AppShell />}>
