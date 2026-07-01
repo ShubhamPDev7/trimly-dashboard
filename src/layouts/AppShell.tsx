@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { Outlet, NavLink, useLocation } from "react-router-dom"
 import { AnimatePresence, motion } from "framer-motion"
+import ConfirmDialog from "@/components/shared/ConfirmDialog"
 import { useFcmRegistration } from "@/hooks/useFcm"
 import {
   LayoutDashboard,
@@ -94,6 +95,7 @@ export default function AppShell() {
   const setSelectedShopId = useShopStore((s) => s.setSelectedShopId)
   const location = useLocation()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false)
 
   useEffect(() => {
     if (!selectedShopId && shopIds.length > 0) {
@@ -128,7 +130,7 @@ export default function AppShell() {
         <div className="border-t border-border/60 p-3">
           <div className="mb-1 truncate px-1 text-sm font-medium">{name}</div>
           <button
-            onClick={clearAuth}
+            onClick={() => setLogoutConfirmOpen(true)}
             className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
           >
             <LogOut className="h-4 w-4" />
@@ -175,7 +177,7 @@ export default function AppShell() {
               <div className="border-t border-border/60 p-3">
                 <div className="mb-1 truncate px-1 text-sm font-medium">{name}</div>
                 <button
-                  onClick={clearAuth}
+                 onClick={() => setLogoutConfirmOpen(true)}
                   className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                 >
                   <LogOut className="h-4 w-4" />
@@ -201,7 +203,7 @@ export default function AppShell() {
             </span>
           </div>
           <button
-            onClick={clearAuth}
+           onClick={() => setLogoutConfirmOpen(true)}
             className="flex size-8 items-center justify-center rounded-full text-muted-foreground hover:bg-destructive/10 hover:text-destructive md:hidden"
           >
             <LogOut className="h-4.5 w-4.5" />
@@ -217,7 +219,11 @@ export default function AppShell() {
         </main>
 
         {/* Mobile floating bottom nav */}
-        <nav className="fixed inset-x-3 bottom-3 z-50 flex items-center justify-around rounded-2xl border border-border/60 bg-background/95 px-1 py-1.5 shadow-[var(--shadow-soft-lg)] backdrop-blur-md safe-bottom md:hidden">
+        <nav
+          className={`fixed inset-x-3 bottom-3 z-50 flex items-center justify-around rounded-2xl border border-border/60 bg-background/95 px-1 py-1.5 shadow-[var(--shadow-soft-lg)] backdrop-blur-md safe-bottom transition-opacity duration-200 md:hidden ${
+            mobileMenuOpen ? "pointer-events-none opacity-0" : "opacity-100"
+          }`}
+        >
           {mobileNavItems.map((item, i) => {
             const isActive = i === activeMobileIndex
             return (
@@ -248,6 +254,14 @@ export default function AppShell() {
           })}
         </nav>
       </div>
+      <ConfirmDialog
+        open={logoutConfirmOpen}
+        onOpenChange={setLogoutConfirmOpen}
+        title="Log Out?"
+        description="You'll need to sign in again to access your dashboard."
+        confirmLabel="Log Out"
+        onConfirm={clearAuth}
+      />
     </div>
   )
 }
