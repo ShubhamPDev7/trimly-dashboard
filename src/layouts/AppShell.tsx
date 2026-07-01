@@ -1,5 +1,6 @@
 import { useEffect } from "react"
 import { Outlet, NavLink } from "react-router-dom"
+import { useFcmRegistration } from "@/hooks/useFcm"
 import {
   LayoutDashboard,
   BarChart3,
@@ -46,6 +47,7 @@ export default function AppShell() {
   }, [selectedShopId, shopIds, setSelectedShopId])
 
   const { data: shop } = useShopProfile()
+  useFcmRegistration()
 
   return (
     <div className="flex min-h-screen bg-muted/30">

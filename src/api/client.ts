@@ -1,5 +1,6 @@
 import axios from "axios"
 import { useAuthStore } from "@/store/authStore"
+import { queryClient } from "@/main"
 
 const API_URL = import.meta.env.VITE_API_URL
 
@@ -57,6 +58,7 @@ apiClient.interceptors.response.use(
         return apiClient(originalRequest)
       } catch (refreshError) {
         useAuthStore.getState().clearAuth()
+        queryClient.clear()
         window.location.href = "/login"
         return Promise.reject(refreshError)
       } finally {
