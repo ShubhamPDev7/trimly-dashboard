@@ -27,6 +27,7 @@ import {
   DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog"
+import ConfirmDialog from "@/components/shared/ConfirmDialog"
 import {
   Select,
   SelectContent,
@@ -58,6 +59,7 @@ export default function QueuePage() {
   const billMutation = useCreateWalkInBill(shopId)
 
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [cancelTarget, setCancelTarget] = useState<string | null>(null)
   const [guestName, setGuestName] = useState("")
   const [guestPhone, setGuestPhone] = useState("")
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([])
@@ -146,11 +148,12 @@ export default function QueuePage() {
     }
   }
 
-  const handleCancel = async (entryId: string) => {
-    if (!confirm("Cancel this queue entry?")) return
+  const handleCancel = async () => {
+    if (!cancelTarget) return
     try {
-      await cancelMutation.mutateAsync(entryId)
+      await cancelMutation.mutateAsync(cancelTarget)
       toast.success("Cancelled")
+      setCancelTarget(null)
     } catch (err: any) {
       toast.error(err?.response?.data?.message || "Failed to cancel")
     }
@@ -293,7 +296,7 @@ export default function QueuePage() {
                       <Button size="sm" variant="outline" onClick={() => handleNoShow(entry.id)}>
                         No-show
                       </Button>
-                      <Button size="sm" variant="outline" onClick={() => handleCancel(entry.id)}>
+                      <Button size="sm" variant="outline" onClick={() => setCancelTarget(entry.id)}>
                         Cancel
                       </Button>
                       <Button
@@ -402,6 +405,15 @@ export default function QueuePage() {
         onOpenChange={(open) => !open && setRecordTarget(null)}
         target={recordTarget ? { type: "walkin", id: recordTarget.id } : null}
         customerName={recordTarget?.name}
+      />
+      <ConfirmDialog
+        open={!!cancelTarget}
+        onOpenChange={(open) => !open && setCancelTarget(null)}
+        title="Cancel Queue Entry?"
+        description="This customer will be removed from the walk-in queue."
+        confirmLabel="Yes, Cancel"
+        onConfirm={handleCancel}
+        loading={cancelMutation.isPending}
       />
     </div>
   )

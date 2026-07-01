@@ -29,6 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { toast } from "sonner"
+import ConfirmDialog from "@/components/shared/ConfirmDialog"
 import { Pencil, Trash2, Plus } from "lucide-react"
 
 const CATEGORIES: ServiceCategory[] = ["MALE", "FEMALE", "CHILDREN"]
@@ -50,6 +51,7 @@ export default function ServicesPage() {
   const deleteMutation = useDeleteService(shopId)
 
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState<FormState>(emptyForm)
 
@@ -93,11 +95,12 @@ export default function ServicesPage() {
     }
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Delete this service?")) return
+  const handleDelete = async () => {
+    if (!deleteTarget) return
     try {
-      await deleteMutation.mutateAsync(id)
+      await deleteMutation.mutateAsync(deleteTarget)
       toast.success("Service deleted")
+      setDeleteTarget(null)
     } catch (err: any) {
       toast.error(err?.response?.data?.message || "Failed to delete service")
     }
@@ -217,7 +220,7 @@ export default function ServicesPage() {
                     <Pencil className="h-4 w-4" />
                   </button>
                   <button
-                    onClick={() => handleDelete(s.id)}
+                    onClick={() => setDeleteTarget(s.id)}
                     className="rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -234,6 +237,15 @@ export default function ServicesPage() {
           </Card>
         ))}
       </div>
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+        title="Delete Service?"
+        description="This will permanently remove this service from your shop menu."
+        confirmLabel="Delete"
+        onConfirm={handleDelete}
+        loading={deleteMutation.isPending}
+      />
     </div>
   )
 }

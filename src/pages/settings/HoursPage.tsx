@@ -14,6 +14,7 @@ import {
 } from "@/hooks/usePolicy"
 import { useShopProfile } from "@/hooks/useShopProfile"
 import { useUpdateShop } from "@/hooks/useShop"
+import ConfirmDialog from "@/components/shared/ConfirmDialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -48,6 +49,7 @@ export default function HoursPage() {
   const upsertPolicy = useUpsertCancellationPolicy(shopId)
   const deletePolicy = useDeleteCancellationPolicy(shopId)
   const [minHours, setMinHours] = useState("24")
+  const [removePolicyOpen, setRemovePolicyOpen] = useState(false)
 
   const [rows, setRows] = useState<DayRow[]>([])
   const [newDate, setNewDate] = useState("")
@@ -140,12 +142,12 @@ export default function HoursPage() {
     }
   }
 
-  const handleRemovePolicy = async () => {
-    if (!confirm("Remove the cancellation policy? Customers will be able to cancel anytime.")) return
+ const handleRemovePolicy = async () => {
     try {
       await deletePolicy.mutateAsync()
       setMinHours("24")
       toast.success("Cancellation policy removed")
+      setRemovePolicyOpen(false)
     } catch (err: any) {
       toast.error(err?.response?.data?.message || "Failed to remove policy")
     }
@@ -340,7 +342,7 @@ export default function HoursPage() {
                 {policy && (
                   <Button
                     variant="outline"
-                    onClick={handleRemovePolicy}
+                    onClick={() => setRemovePolicyOpen(true)}
                     disabled={deletePolicy.isPending}
                   >
                     Remove Policy
@@ -351,6 +353,15 @@ export default function HoursPage() {
           )}
         </CardContent>
       </Card>
+      <ConfirmDialog
+        open={removePolicyOpen}
+        onOpenChange={setRemovePolicyOpen}
+        title="Remove Cancellation Policy?"
+        description="Customers will be able to cancel bookings anytime, with no minimum notice required."
+        confirmLabel="Remove"
+        onConfirm={handleRemovePolicy}
+        loading={deletePolicy.isPending}
+      />
     </div>
   )
 }

@@ -106,34 +106,40 @@ export default function BookingsPage() {
         </Button>
       </div>
 
-      <div className="flex flex-col gap-2 sm:flex-row">
-        <Input
-          type="date"
-          value={date}
-          onChange={(e) => {
-            setDate(e.target.value)
-            setPage(0)
-          }}
-          className="sm:w-44"
-        />
-        <Select
-          value={status}
-          onValueChange={(v) => {
-            setStatus(v as BookingStatus | "ALL")
-            setPage(0)
-          }}
-        >
-          <SelectTrigger className="sm:w-40">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {STATUS_OPTIONS.map((s) => (
-              <SelectItem key={s} value={s}>
-                {s}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+        <div className="space-y-1">
+          <Label className="text-xs text-muted-foreground">Filter by date</Label>
+          <Input
+            type="date"
+            value={date}
+            onChange={(e) => {
+              setDate(e.target.value)
+              setPage(0)
+            }}
+            className="sm:w-44"
+          />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs text-muted-foreground">Status</Label>
+          <Select
+            value={status}
+            onValueChange={(v) => {
+              setStatus(v as BookingStatus | "ALL")
+              setPage(0)
+            }}
+          >
+            <SelectTrigger className="sm:w-40">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {STATUS_OPTIONS.map((s) => (
+                <SelectItem key={s} value={s}>
+                  {s}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
         {date && (
           <Button variant="outline" size="sm" onClick={() => setDate("")}>
             Clear date

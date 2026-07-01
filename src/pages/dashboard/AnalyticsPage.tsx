@@ -70,20 +70,20 @@ export default function AnalyticsPage() {
   )
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 p-4 md:p-6">
+   <div className="mx-auto max-w-6xl space-y-6 overflow-x-hidden p-4 md:p-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="font-heading text-xl font-semibold tracking-tight md:text-2xl">Analytics</h1>
           <p className="text-sm text-muted-foreground">Performance over the selected range</p>
         </div>
-        <div className="flex gap-2">
-          <div className="space-y-1">
+        <div className="grid grid-cols-2 gap-2 sm:flex">
+          <div className="min-w-0 space-y-1">
             <Label className="text-xs">From</Label>
-            <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+            <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full sm:w-auto" />
           </div>
-          <div className="space-y-1">
+          <div className="min-w-0 space-y-1">
             <Label className="text-xs">To</Label>
-            <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+            <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="w-full sm:w-auto" />
           </div>
         </div>
       </div>

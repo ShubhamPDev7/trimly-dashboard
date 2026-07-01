@@ -187,7 +187,7 @@ export default function AppShell() {
         )}
       </AnimatePresence>
 
-      <div className="flex min-h-screen flex-1 flex-col">
+      <div className="flex min-h-screen min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-30 flex items-center justify-between border-b border-border/60 bg-background/85 px-4 py-3.5 backdrop-blur-md safe-top md:px-6">
           <div className="flex items-center gap-3">
             <button

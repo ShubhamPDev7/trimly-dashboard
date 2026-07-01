@@ -177,11 +177,14 @@
     }
   body {
     @apply bg-background text-foreground antialiased;
+    overflow-x: hidden;
     }
   html {
     @apply font-sans;
     scroll-behavior: smooth;
     -webkit-tap-highlight-color: transparent;
+    overflow-x: hidden;
+    width: 100%;
     }
   ::selection {
     background: oklch(0.57 0.19 27 / 0.2);

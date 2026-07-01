@@ -18,6 +18,13 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import ImageUpload from "@/components/shared/ImageUpload"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { toast } from "sonner"
 import { X, Plus } from "lucide-react"
 
@@ -198,18 +205,21 @@ export default function ServiceRecordDialog({ open, onOpenChange, target, custom
             <div className="space-y-2 mt-2">
               {usageRows.map((row, idx) => (
                 <div key={idx} className="flex items-center gap-2">
-                  <select
+                  <Select
                     value={row.inventoryItemId}
-                    onChange={(e) => updateUsageRow(idx, { inventoryItemId: e.target.value })}
-                    className="h-9 flex-1 rounded-md border border-input bg-background px-2 text-sm"
+                    onValueChange={(v) => updateUsageRow(idx, { inventoryItemId: v })}
                   >
-                    <option value="">Select item</option>
-                    {inventory?.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.name} ({item.quantityInStock} {item.unit ?? ""} left)
-                      </option>
-                    ))}
-                  </select>
+                    <SelectTrigger className="h-9 flex-1">
+                      <SelectValue placeholder="Select item" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {inventory?.map((item) => (
+                        <SelectItem key={item.id} value={item.id}>
+                          {item.name} ({item.quantityInStock} {item.unit ?? ""} left)
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <Input
                     type="number"
                     step="0.01"
