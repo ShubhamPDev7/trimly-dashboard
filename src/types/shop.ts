@@ -34,3 +34,10 @@ export interface ShopPublicProfileResponse {
   staff: unknown[]
   cancellationPolicy: unknown | null
 }
+
+export interface ShopUpdateRequest {
+  name: string
+  address: string
+  locality: string
+  timezone: string
+}

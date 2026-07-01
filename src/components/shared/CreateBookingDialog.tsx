@@ -39,7 +39,9 @@ export default function CreateBookingDialog({ open, onOpenChange }: Props) {
   const [guestPhone, setGuestPhone] = useState("")
   const [staffId, setStaffId] = useState("")
   const [date, setDate] = useState(todayStr)
-const nowMinutes = new Date().getHours() * 60 + new Date().getMinutes()
+  
+  const nowMinutes = new Date().getHours() * 60 + new Date().getMinutes()
+  
   const [timeSlot, setTimeSlot] = useState("")
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([])
 
@@ -116,10 +118,10 @@ const nowMinutes = new Date().getHours() * 60 + new Date().getMinutes()
                   type="button"
                   key={s.id}
                   onClick={() => toggleService(s.id)}
-                  className={`rounded-md border px-2.5 py-1 text-sm ${
+                  className={`rounded-md border px-2.5 py-1 text-sm transition-colors ${
                     selectedServiceIds.includes(s.id)
                       ? "border-primary bg-primary text-primary-foreground"
-                      : "border-input"
+                      : "border-input hover:bg-muted"
                   }`}
                 >
                   {s.name}
@@ -192,10 +194,10 @@ const nowMinutes = new Date().getHours() * 60 + new Date().getMinutes()
                         type="button"
                         key={slot}
                         onClick={() => setTimeSlot(display)}
-                        className={`rounded-md border px-2.5 py-1 text-sm ${
+                        className={`rounded-md border px-2.5 py-1 text-sm transition-colors ${
                           timeSlot === display
                             ? "border-primary bg-primary text-primary-foreground"
-                            : "border-input"
+                            : "border-input hover:bg-muted"
                         }`}
                       >
                         {display}
@@ -206,7 +208,7 @@ const nowMinutes = new Date().getHours() * 60 + new Date().getMinutes()
             </div>
           )}
 
-          <DialogFooter>
+          <DialogFooter className="pt-2">
             <Button type="submit" disabled={createMutation.isPending} className="w-full">
               {createMutation.isPending ? "Creating..." : "Create Booking"}
             </Button>

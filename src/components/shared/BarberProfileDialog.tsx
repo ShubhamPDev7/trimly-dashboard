@@ -123,7 +123,7 @@ export default function BarberProfileDialog({ staffUserId, staffName, open, onOp
                 onRemove={() => setPhotoUrl("")}
               />
             </div>
-            <DialogFooter>
+            <DialogFooter className="pt-2">
               <Button type="submit" disabled={upsertMutation.isPending} className="w-full">
                 {upsertMutation.isPending ? "Saving..." : "Save Profile"}
               </Button>

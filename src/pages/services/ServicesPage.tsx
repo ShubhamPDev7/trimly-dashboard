@@ -106,12 +106,15 @@ export default function ServicesPage() {
   const saving = createMutation.isPending || updateMutation.isPending
 
   return (
-    <div className="space-y-4 p-4 md:p-6">
+    <div className="mx-auto max-w-5xl space-y-6 p-4 md:p-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold">Services</h1>
+        <div>
+          <h1 className="font-heading text-xl font-semibold tracking-tight md:text-2xl">Services</h1>
+          <p className="text-sm text-muted-foreground">Manage your service menu and pricing</p>
+        </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button size="sm" onClick={openCreate}>
+            <Button size="sm">
               <Plus className="mr-1 h-4 w-4" />
               Add
             </Button>
@@ -180,45 +183,49 @@ export default function ServicesPage() {
       </div>
 
       {isLoading && (
-        <div className="space-y-3">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-20 w-full" />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-28 w-full rounded-2xl" />
           ))}
         </div>
       )}
 
       {!isLoading && services?.length === 0 && (
-        <p className="text-sm text-muted-foreground">No services yet. Add your first one.</p>
+        <Card>
+          <CardContent className="py-10 text-center text-sm text-muted-foreground">
+            No services yet. Add your first one.
+          </CardContent>
+        </Card>
       )}
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {services?.map((s) => (
           <Card key={s.id}>
-            <CardContent className="p-4">
+            <CardContent className="p-5">
               <div className="flex items-start justify-between">
                 <div>
-                  <div className="font-medium">{s.name}</div>
-                  <Badge variant="secondary" className="mt-1">
+                  <div className="font-medium text-base">{s.name}</div>
+                  <Badge variant="secondary" className="mt-1.5">
                     {s.category}
                   </Badge>
                 </div>
                 <div className="flex gap-1">
                   <button
                     onClick={() => openEdit(s)}
-                    className="rounded-md p-1.5 text-muted-foreground hover:bg-muted"
+                    className="rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-muted"
                   >
                     <Pencil className="h-4 w-4" />
                   </button>
                   <button
                     onClick={() => handleDelete(s.id)}
-                    className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-destructive"
+                    className="rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </div>
               </div>
-              <div className="mt-3 flex items-center justify-between text-sm">
-                <span className="font-semibold">₹{s.price}</span>
+              <div className="mt-4 flex items-center justify-between text-sm border-t border-border/60 pt-3">
+                <span className="font-semibold text-base">₹{s.price}</span>
                 {s.estTimeMinutes != null && (
                   <span className="text-muted-foreground">{s.estTimeMinutes} min</span>
                 )}

@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { motion } from "framer-motion"
 import { useShopStore } from "@/store/shopStore"
 import {
   useInventory,
@@ -20,6 +21,7 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog"
 import { toast } from "sonner"
 import { Pencil, Trash2, Plus } from "lucide-react"
@@ -42,6 +44,12 @@ const emptyForm: FormState = {
   costPerUnit: "",
 }
 
+const listStagger = { hidden: {}, show: { transition: { staggerChildren: 0.05 } } }
+const listItem = {
+  hidden: { opacity: 0, y: 8 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.16, 1, 0.3, 1] as const } },
+}
+
 export default function InventoryPage() {
   const shopId = useShopStore((s) => s.selectedShopId)
   const { data: items, isLoading } = useInventory(shopId)
@@ -51,6 +59,9 @@ export default function InventoryPage() {
 
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingId, setEditingId] = useState<string | null>(null)
+  
+  // New state for custom confirm dialog
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
   const [form, setForm] = useState<FormState>(emptyForm)
 
   const openCreate = () => {
@@ -97,11 +108,13 @@ export default function InventoryPage() {
     }
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Delete this inventory item?")) return
+  // Refactored to actually execute the deletion when confirmed from the modal
+  const executeDelete = async () => {
+    if (!deleteTarget) return
     try {
-      await deleteMutation.mutateAsync(id)
+      await deleteMutation.mutateAsync(deleteTarget)
       toast.success("Item deleted")
+      setDeleteTarget(null)
     } catch (err: any) {
       toast.error(err?.response?.data?.message || "Failed to delete item")
     }
@@ -110,9 +123,12 @@ export default function InventoryPage() {
   const saving = createMutation.isPending || updateMutation.isPending
 
   return (
-    <div className="space-y-4 p-4 md:p-6">
+    <div className="mx-auto max-w-5xl space-y-5 p-4 md:p-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold">Inventory</h1>
+        <div>
+          <h1 className="font-heading text-xl font-semibold tracking-tight md:text-2xl">Inventory</h1>
+          <p className="text-sm text-muted-foreground">Stock levels and supplies</p>
+        </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button size="sm" onClick={openCreate}>
@@ -200,47 +216,77 @@ export default function InventoryPage() {
       )}
 
       {!isLoading && items?.length === 0 && (
-        <p className="text-sm text-muted-foreground">No inventory items yet.</p>
+        <Card>
+          <CardContent className="py-10 text-center text-sm text-muted-foreground">
+            No inventory items yet.
+          </CardContent>
+        </Card>
       )}
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <motion.div variants={listStagger} initial="hidden" animate="show" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {items?.map((item) => (
-          <Card key={item.id}>
-            <CardContent className="p-4">
-              <div className="flex items-start justify-between">
-                <div>
-                  <div className="font-medium">{item.name}</div>
-                  {item.lowStock && (
-                    <Badge className="mt-1 border-0 bg-red-100 text-red-800 hover:bg-red-100">
-                      Low Stock
-                    </Badge>
-                  )}
+          <motion.div key={item.id} variants={listItem}>
+            <Card className={item.lowStock ? "border-destructive/40" : undefined}>
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <div className="font-medium">{item.name}</div>
+                    {item.lowStock && (
+                      <Badge variant="destructive" className="mt-1.5">
+                        Low Stock
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="flex gap-0.5">
+                    <button
+                      onClick={() => openEdit(item)}
+                      className="rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-muted"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => setDeleteTarget(item.id)}
+                      className="rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
-                <div className="flex gap-1">
-                  <button
-                    onClick={() => openEdit(item)}
-                    className="rounded-md p-1.5 text-muted-foreground hover:bg-muted"
-                  >
-                    <Pencil className="h-4 w-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(item.id)}
-                    className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                <div className="mt-3 text-sm text-muted-foreground">
+                  {item.quantityInStock} {item.unit ?? "units"} in stock
                 </div>
-              </div>
-              <div className="mt-3 text-sm text-muted-foreground">
-                {item.quantityInStock} {item.unit ?? "units"} in stock
-              </div>
-              {item.costPerUnit != null && (
-                <div className="text-sm text-muted-foreground">₹{item.costPerUnit}/unit</div>
-              )}
-            </CardContent>
-          </Card>
+                {item.costPerUnit != null && (
+                  <div className="text-sm text-muted-foreground">₹{item.costPerUnit}/unit</div>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
+
+      {/* Custom Confirmation Modal for Deleting Inventory */}
+      <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Inventory Item?</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this item? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4 gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setDeleteTarget(null)}>
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={executeDelete} 
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? "Deleting..." : "Delete Item"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

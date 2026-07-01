@@ -57,7 +57,7 @@ export default function StaffLeaveDialog({ staffUserId, staffName, open, onOpenC
           <DialogTitle>{staffName}'s Leaves</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleMark} className="flex flex-col gap-3 border-b pb-4 sm:flex-row sm:items-end">
+        <form onSubmit={handleMark} className="flex flex-col gap-3 border-b border-border/60 pb-4 sm:flex-row sm:items-end">
           <div className="flex-1 space-y-1.5">
             <Label>Date</Label>
             <Input
@@ -76,21 +76,21 @@ export default function StaffLeaveDialog({ staffUserId, staffName, open, onOpenC
           </Button>
         </form>
 
-        <div className="space-y-2">
+        <div className="space-y-2 pt-2">
           {isLoading && <p className="text-sm text-muted-foreground">Loading...</p>}
           {!isLoading && leaves?.length === 0 && (
-            <p className="text-sm text-muted-foreground">No leaves marked.</p>
+            <p className="text-sm text-muted-foreground text-center py-4">No leaves marked.</p>
           )}
           {leaves?.map((l) => (
-            <div key={l.id} className="flex items-center justify-between rounded-md border p-3">
+            <div key={l.id} className="flex items-center justify-between rounded-md border border-border/60 p-3">
               <div>
                 <div className="text-sm font-medium">{l.leaveDate}</div>
-                {l.reason && <div className="text-xs text-muted-foreground">{l.reason}</div>}
+                {l.reason && <div className="text-xs text-muted-foreground mt-0.5">{l.reason}</div>}
               </div>
               <button
                 onClick={() => handleCancel(l.leaveDate)}
                 title="Cancel Leave"
-                className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-destructive"
+                className="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
               >
                 <Trash2 className="h-4 w-4" />
               </button>

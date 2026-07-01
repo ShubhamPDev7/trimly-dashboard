@@ -8,6 +8,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog"
 import { toast } from "sonner"
 
@@ -77,24 +78,25 @@ export default function StaffShiftDialog({ staffUserId, staffName, open, onOpenC
         <DialogHeader>
           <DialogTitle>{staffName}'s Weekly Shift</DialogTitle>
         </DialogHeader>
-        <div className="space-y-3">
+        <div className="space-y-4">
           {rows.map((row) => (
             <div
               key={row.dayOfWeek}
-              className="flex flex-col gap-2 border-b pb-3 last:border-b-0 sm:flex-row sm:items-center sm:justify-between"
+              className="flex flex-col gap-2 border-b border-border/60 pb-3 last:border-b-0 sm:flex-row sm:items-center sm:justify-between"
             >
               <div className="w-24 font-medium text-sm">{DAY_LABELS[row.dayOfWeek]}</div>
-              <div className="flex items-center gap-2">
-                <label className="flex items-center gap-1.5 text-sm">
+              <div className="flex items-center gap-3">
+                <label className="flex items-center gap-1.5 text-sm text-muted-foreground">
                   <input
                     type="checkbox"
                     checked={row.isOff}
                     onChange={(e) => updateRow(row.dayOfWeek, { isOff: e.target.checked })}
+                    className="rounded border-input text-primary focus:ring-primary"
                   />
                   Off
                 </label>
                 {!row.isOff && (
-                  <>
+                  <div className="flex items-center gap-2">
                     <Input
                       type="time"
                       value={row.startTime}
@@ -108,18 +110,20 @@ export default function StaffShiftDialog({ staffUserId, staffName, open, onOpenC
                       onChange={(e) => updateRow(row.dayOfWeek, { endTime: e.target.value })}
                       className="w-28"
                     />
-                  </>
+                  </div>
                 )}
               </div>
             </div>
           ))}
-          <Button
-            onClick={handleSaveAll}
-            disabled={upsertMutation.isPending}
-            className="w-full"
-          >
-            {upsertMutation.isPending ? "Saving..." : "Save Shifts"}
-          </Button>
+          <DialogFooter className="pt-2">
+            <Button
+              onClick={handleSaveAll}
+              disabled={upsertMutation.isPending}
+              className="w-full"
+            >
+              {upsertMutation.isPending ? "Saving..." : "Save Shifts"}
+            </Button>
+          </DialogFooter>
         </div>
       </DialogContent>
     </Dialog>

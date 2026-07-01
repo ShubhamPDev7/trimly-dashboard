@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { motion } from "framer-motion"
 import { useShopStore } from "@/store/shopStore"
 import { useServices } from "@/hooks/useServices"
 import { useStaffList } from "@/hooks/useStaff"
@@ -36,6 +37,12 @@ import {
 import { toast } from "sonner"
 import { Plus } from "lucide-react"
 import ServiceRecordDialog from "@/components/shared/ServiceRecordDialog"
+
+const listStagger = { hidden: {}, show: { transition: { staggerChildren: 0.05 } } }
+const listItem = {
+  hidden: { opacity: 0, y: 8 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.16, 1, 0.3, 1] as const } },
+}
 
 export default function QueuePage() {
   const shopId = useShopStore((s) => s.selectedShopId)
@@ -159,9 +166,12 @@ export default function QueuePage() {
   }
 
   return (
-    <div className="space-y-4 p-4 md:p-6">
+    <div className="mx-auto max-w-4xl space-y-5 p-4 md:p-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold">Walk-in Queue</h1>
+        <div>
+          <h1 className="font-heading text-xl font-semibold tracking-tight md:text-2xl">Walk-in Queue</h1>
+          <p className="text-sm text-muted-foreground">Live view of who's waiting</p>
+        </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button size="sm">
@@ -190,10 +200,10 @@ export default function QueuePage() {
                       type="button"
                       key={s.id}
                       onClick={() => toggleService(s.id)}
-                      className={`rounded-md border px-2.5 py-1 text-sm ${
+                      className={`rounded-full border px-3 py-1.5 text-sm font-medium transition-all duration-200 active:scale-95 ${
                         selectedServiceIds.includes(s.id)
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-input"
+                          ? "border-primary bg-primary text-primary-foreground shadow-[var(--shadow-glow-primary)]"
+                          : "border-input hover:bg-muted"
                       }`}
                     >
                       {s.name}
@@ -235,73 +245,79 @@ export default function QueuePage() {
       )}
 
       {!isLoading && queue?.length === 0 && (
-        <p className="text-sm text-muted-foreground">Queue is empty.</p>
+        <Card>
+          <CardContent className="py-10 text-center text-sm text-muted-foreground">
+            Queue is empty.
+          </CardContent>
+        </Card>
       )}
 
-      <div className="space-y-3">
+      <motion.div variants={listStagger} initial="hidden" animate="show" className="space-y-3">
         {queue?.map((entry) => (
-          <Card key={entry.id}>
-            <CardContent className="p-4">
-              <div className="flex items-start justify-between">
-                <div>
-                  <div className="flex items-center gap-2">
-                    {entry.queuePosition != null && (
-                      <span className="text-sm font-semibold text-muted-foreground">
-                        #{entry.queuePosition}
-                      </span>
-                    )}
-                    <span className="font-medium">{entry.guestName ?? "Registered Customer"}</span>
-                  </div>
-                  {entry.guestPhone && (
-                    <div className="text-sm text-muted-foreground">{entry.guestPhone}</div>
-                  )}
-                  {entry.estimatedWaitMinutes != null && entry.status === "WAITING" && (
-                    <div className="text-sm text-muted-foreground">
-                      Est. wait: {entry.estimatedWaitMinutes} min
+          <motion.div key={entry.id} variants={listItem}>
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      {entry.queuePosition != null && (
+                        <span className="flex size-5.5 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+                          {entry.queuePosition}
+                        </span>
+                      )}
+                      <span className="font-medium">{entry.guestName ?? "Registered Customer"}</span>
                     </div>
+                    {entry.guestPhone && (
+                      <div className="text-sm text-muted-foreground">{entry.guestPhone}</div>
+                    )}
+                    {entry.estimatedWaitMinutes != null && entry.status === "WAITING" && (
+                      <div className="text-sm text-muted-foreground">
+                        Est. wait: {entry.estimatedWaitMinutes} min
+                      </div>
+                    )}
+                  </div>
+                  <StatusBadge status={entry.status} />
+                </div>
+
+                <div className="mt-2.5 flex flex-wrap gap-1.5 text-xs">
+                  {entry.services.map((s) => (
+                    <span key={s.serviceId} className="rounded-full bg-muted px-2.5 py-1 font-medium">
+                      {s.serviceName}
+                    </span>
+                  ))}
+                </div>
+
+                <div className="mt-3 flex justify-end gap-2 border-t border-border/60 pt-3">
+                  {entry.status === "WAITING" && (
+                    <>
+                      <Button size="sm" variant="outline" onClick={() => handleNoShow(entry.id)}>
+                        No-show
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => handleCancel(entry.id)}>
+                        Cancel
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          setStartDialogEntryId(entry.id)
+                          setStartStaffId(entry.preferredStaffId ?? "")
+                        }}
+                      >
+                        Start
+                      </Button>
+                    </>
+                  )}
+                  {entry.status === "IN_PROGRESS" && (
+                    <Button size="sm" onClick={() => handleComplete(entry.id)}>
+                      Complete
+                    </Button>
                   )}
                 </div>
-                <StatusBadge status={entry.status} />
-              </div>
-
-              <div className="mt-2 flex flex-wrap gap-1.5 text-sm">
-                {entry.services.map((s) => (
-                  <span key={s.serviceId} className="rounded-md bg-muted px-2 py-0.5">
-                    {s.serviceName}
-                  </span>
-                ))}
-              </div>
-
-              <div className="mt-3 flex justify-end gap-2">
-                {entry.status === "WAITING" && (
-                  <>
-                    <Button size="sm" variant="outline" onClick={() => handleNoShow(entry.id)}>
-                      No-show
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => handleCancel(entry.id)}>
-                      Cancel
-                    </Button>
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        setStartDialogEntryId(entry.id)
-                        setStartStaffId(entry.preferredStaffId ?? "")
-                      }}
-                    >
-                      Start
-                    </Button>
-                  </>
-                )}
-                {entry.status === "IN_PROGRESS" && (
-                  <Button size="sm" onClick={() => handleComplete(entry.id)}>
-                    Complete
-                  </Button>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
 
       <Dialog
         open={!!startDialogEntryId}

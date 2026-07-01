@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { motion } from "framer-motion"
 import { useShopStore } from "@/store/shopStore"
 import { useAuthStore } from "@/store/authStore"
 import { useStaffList, useAddStaff, useRemoveStaff } from "@/hooks/useStaff"
@@ -14,6 +15,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogTrigger,
   DialogFooter,
 } from "@/components/ui/dialog"
@@ -30,6 +32,12 @@ import StaffShiftDialog from "@/components/shared/StaffShiftDialog"
 import BarberProfileDialog from "@/components/shared/BarberProfileDialog"
 import StaffLeaveDialog from "@/components/shared/StaffLeaveDialog"
 
+const listStagger = { hidden: {}, show: { transition: { staggerChildren: 0.05 } } }
+const listItem = {
+  hidden: { opacity: 0, y: 8 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.16, 1, 0.3, 1] as const } },
+}
+
 export default function StaffPage() {
   const shopId = useShopStore((s) => s.selectedShopId)
   const currentUserId = useAuthStore((s) => s.userId)
@@ -40,6 +48,10 @@ export default function StaffPage() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [email, setEmail] = useState("")
   const [role, setRole] = useState<StaffRole>("STAFF")
+  
+  // New state for custom confirm dialog
+  const [removeTarget, setRemoveTarget] = useState<string | null>(null)
+  
   const [profileDialogStaff, setProfileDialogStaff] = useState<{ id: string; name: string } | null>(null)
   const [shiftDialogStaff, setShiftDialogStaff] = useState<{ id: string; name: string } | null>(null)
   const [leaveDialogStaff, setLeaveDialogStaff] = useState<{ id: string; name: string } | null>(null)
@@ -60,20 +72,25 @@ export default function StaffPage() {
     }
   }
 
-  const handleRemove = async (userId: string) => {
-    if (!confirm("Remove this staff member?")) return
+  // Refactored to actually execute the removal when confirmed from the modal
+  const executeRemove = async () => {
+    if (!removeTarget) return
     try {
-      await removeMutation.mutateAsync(userId)
+      await removeMutation.mutateAsync(removeTarget)
       toast.success("Staff removed")
+      setRemoveTarget(null)
     } catch (err: any) {
       toast.error(err?.response?.data?.message || "Failed to remove staff")
     }
   }
 
   return (
-    <div className="space-y-4 p-4 md:p-6">
+    <div className="mx-auto max-w-3xl space-y-5 p-4 md:p-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold">Staff</h1>
+        <div>
+          <h1 className="font-heading text-xl font-semibold tracking-tight md:text-2xl">Staff</h1>
+          <p className="text-sm text-muted-foreground">Team members and permissions</p>
+        </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button size="sm">
@@ -130,61 +147,96 @@ export default function StaffPage() {
       )}
 
       {!isLoading && staff?.length === 0 && (
-        <p className="text-sm text-muted-foreground">No staff yet.</p>
+        <Card>
+          <CardContent className="py-10 text-center text-sm text-muted-foreground">
+            No staff yet.
+          </CardContent>
+        </Card>
       )}
 
-      <div className="space-y-2">
+      <motion.div variants={listStagger} initial="hidden" animate="show" className="space-y-2.5">
         {staff?.map((s) => (
-          <Card key={s.userId}>
-            <CardContent className="flex items-center justify-between p-4">
-              <div>
-                <div className="font-medium">{s.name}</div>
-                <div className="text-sm text-muted-foreground">{s.email}</div>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <Badge variant={s.roleInShop === "OWNER" ? "default" : "secondary"}>
-                  {s.roleInShop}
-                </Badge>
-                
-                <button
-                  onClick={() => setProfileDialogStaff({ id: s.userId, name: s.name })}
-                  title="Public Profile"
-                  className="rounded-md p-1.5 text-muted-foreground hover:bg-muted"
-                >
-                  <UserCircle className="h-4 w-4" />
-                </button>
-                
-                <button
-                  onClick={() => setShiftDialogStaff({ id: s.userId, name: s.name })}
-                  title="Weekly Shifts"
-                  className="rounded-md p-1.5 text-muted-foreground hover:bg-muted"
-                >
-                  <Clock className="h-4 w-4" />
-                </button>
+          <motion.div key={s.userId} variants={listItem}>
+            <Card>
+              <CardContent className="flex items-center justify-between gap-3 p-4">
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+                    {s.name?.[0]?.toUpperCase() ?? "?"}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="truncate font-medium">{s.name}</div>
+                    <div className="truncate text-sm text-muted-foreground">{s.email}</div>
+                  </div>
+                </div>
 
-                <button
-                  onClick={() => setLeaveDialogStaff({ id: s.userId, name: s.name })}
-                  title="Leaves"
-                  className="rounded-md p-1.5 text-muted-foreground hover:bg-muted"
-                >
-                  <CalendarOff className="h-4 w-4" />
-                </button>
+                <div className="flex shrink-0 items-center gap-1">
+                  <Badge variant={s.roleInShop === "OWNER" ? "default" : "secondary"} className="mr-1.5">
+                    {s.roleInShop}
+                  </Badge>
 
-                {s.userId !== currentUserId && (
                   <button
-                    onClick={() => handleRemove(s.userId)}
-                    title="Remove Staff"
-                    className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-destructive"
+                    onClick={() => setProfileDialogStaff({ id: s.userId, name: s.name })}
+                    title="Public Profile"
+                    className="rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-muted"
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <UserCircle className="h-4 w-4" />
                   </button>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+
+                  <button
+                    onClick={() => setShiftDialogStaff({ id: s.userId, name: s.name })}
+                    title="Weekly Shifts"
+                    className="rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-muted"
+                  >
+                    <Clock className="h-4 w-4" />
+                  </button>
+
+                  <button
+                    onClick={() => setLeaveDialogStaff({ id: s.userId, name: s.name })}
+                    title="Leaves"
+                    className="rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-muted"
+                  >
+                    <CalendarOff className="h-4 w-4" />
+                  </button>
+
+                  {s.userId !== currentUserId && (
+                    <button
+                      onClick={() => setRemoveTarget(s.userId)}
+                      title="Remove Staff"
+                      className="rounded-full p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
+
+      {/* Custom Confirmation Modal for Removing Staff */}
+      <Dialog open={!!removeTarget} onOpenChange={(open) => !open && setRemoveTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Remove Staff Member?</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to remove this staff member? They will lose access to the shop immediately.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-4 gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setRemoveTarget(null)}>
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={executeRemove} 
+              disabled={removeMutation.isPending}
+            >
+              {removeMutation.isPending ? "Removing..." : "Yes, Remove"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <StaffShiftDialog
         staffUserId={shiftDialogStaff?.id ?? null}

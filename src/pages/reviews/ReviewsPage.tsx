@@ -34,11 +34,12 @@ function ReplyBox({
 }) {
   const [reply, setReply] = useState("")
   return (
-    <div className="mt-3 space-y-2 border-t pt-3">
+    <div className="mt-4 space-y-3 border-t border-border/60 pt-4">
       <Textarea
         placeholder="Write a reply..."
         value={reply}
         onChange={(e) => setReply(e.target.value)}
+        className="resize-none"
       />
       <Button
         size="sm"
@@ -69,13 +70,16 @@ export default function ReviewsPage() {
   }
 
   return (
-    <div className="space-y-4 p-4 md:p-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold">Reviews</h1>
+    <div className="mx-auto max-w-4xl space-y-6 p-4 md:p-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="font-heading text-xl font-semibold tracking-tight md:text-2xl">Reviews</h1>
+          <p className="text-sm text-muted-foreground">What your customers are saying</p>
+        </div>
         {summary && (
-          <div className="flex items-center gap-2 text-sm">
+          <div className="flex items-center gap-2 rounded-xl bg-muted/40 px-4 py-2 text-sm border border-border/60">
             <StarRow rating={Math.round(summary.averageRating)} />
-            <span className="font-medium">{summary.averageRating.toFixed(1)}</span>
+            <span className="font-semibold">{summary.averageRating.toFixed(1)}</span>
             <span className="text-muted-foreground">
               ({summary.totalReviews} review{summary.totalReviews === 1 ? "" : "s"})
             </span>
@@ -84,21 +88,25 @@ export default function ReviewsPage() {
       </div>
 
       {isLoading && (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-24 w-full" />
+            <Skeleton key={i} className="h-32 w-full rounded-2xl" />
           ))}
         </div>
       )}
 
       {!isLoading && reviews?.content.length === 0 && (
-        <p className="text-sm text-muted-foreground">No reviews yet.</p>
+        <Card>
+          <CardContent className="py-10 text-center text-sm text-muted-foreground">
+            No reviews yet.
+          </CardContent>
+        </Card>
       )}
 
-      <div className="space-y-3">
+      <div className="space-y-4">
         {reviews?.content.map((review) => (
           <Card key={review.id}>
-            <CardContent className="p-4">
+            <CardContent className="p-5">
               <div className="flex items-center justify-between">
                 <StarRow rating={review.rating} />
                 <span className="text-xs text-muted-foreground">
@@ -106,15 +114,15 @@ export default function ReviewsPage() {
                 </span>
               </div>
               {review.comment && (
-                <p className="mt-2 text-sm">{review.comment}</p>
+                <p className="mt-3 text-sm text-foreground/90 leading-relaxed">{review.comment}</p>
               )}
 
               {review.ownerReply ? (
-                <div className="mt-3 rounded-lg bg-muted p-3 text-sm">
-                  <div className="mb-1 text-xs font-medium text-muted-foreground">
+                <div className="mt-4 rounded-xl bg-muted/50 p-4 text-sm border border-border/40">
+                  <div className="mb-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                     Your reply
                   </div>
-                  {review.ownerReply}
+                  <p className="text-foreground/80">{review.ownerReply}</p>
                 </div>
               ) : (
                 <ReplyBox
@@ -129,7 +137,7 @@ export default function ReviewsPage() {
       </div>
 
       {reviews && reviews.totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2 pt-2">
+        <div className="flex items-center justify-between pt-4">
           <Button
             variant="outline"
             size="sm"
