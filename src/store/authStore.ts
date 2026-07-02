@@ -1,6 +1,7 @@
 import { create } from "zustand"
 import { persist } from "zustand/middleware"
 import { decodeShopIds } from "@/lib/jwt"
+import { useShopStore } from "@/store/shopStore"
 
 export type UserRole = "OWNER" | "STAFF" | "CUSTOMER"
 
@@ -35,7 +36,12 @@ export const useAuthStore = create<AuthState>()(
       role: null,
       shopIds: [],
       isAuthenticated: false,
-      setAuth: (data) =>
+      setAuth: (data) => {
+        const newShopIds = decodeShopIds(data.accessToken)
+        const currentSelected = useShopStore.getState().selectedShopId
+        if (currentSelected && !newShopIds.includes(currentSelected)) {
+          useShopStore.getState().clearShop()
+        }
         set({
           accessToken: data.accessToken,
           refreshToken: data.refreshToken,
@@ -43,10 +49,12 @@ export const useAuthStore = create<AuthState>()(
           name: data.name,
           email: data.email,
           role: data.role as UserRole,
-          shopIds: decodeShopIds(data.accessToken),
+          shopIds: newShopIds,
           isAuthenticated: true,
-        }),
-      clearAuth: () =>
+        })
+      },
+      clearAuth: () => {
+        useShopStore.getState().clearShop()
         set({
           accessToken: null,
           refreshToken: null,
@@ -56,7 +64,8 @@ export const useAuthStore = create<AuthState>()(
           role: null,
           shopIds: [],
           isAuthenticated: false,
-        }),
+        })
+      },
     }),
     {
       name: "trimly-auth",

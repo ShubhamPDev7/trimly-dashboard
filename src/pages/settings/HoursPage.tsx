@@ -15,6 +15,7 @@ import {
 import { useShopProfile } from "@/hooks/useShopProfile"
 import { useUpdateShop } from "@/hooks/useShop"
 import ConfirmDialog from "@/components/shared/ConfirmDialog"
+import LinkPhoneCard from "@/components/shared/LinkPhoneCard"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -169,6 +170,8 @@ export default function HoursPage() {
         <h1 className="font-heading text-xl font-semibold tracking-tight md:text-2xl">Shop Settings</h1>
         <p className="text-sm text-muted-foreground">Manage your profile, hours, and policies</p>
       </div>
+
+      <LinkPhoneCard />
 
       <Card>
         <CardHeader>
