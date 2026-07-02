@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import { Eye, EyeOff, Scissors } from "lucide-react"
 import { loginRequest, registerRequest, forgotPasswordRequest } from "@/api/auth"
+import { sendOtpRequest, verifyOtpRequest } from "@/api/otp"
 import {
   Dialog,
   DialogContent,
@@ -34,6 +35,11 @@ export default function LoginPage() {
 const [forgotEmail, setForgotEmail] = useState("")
 const [forgotLoading, setForgotLoading] = useState(false)
 const [forgotSent, setForgotSent] = useState(false)
+const [useOtp, setUseOtp] = useState(false)
+  const [otpPhone, setOtpPhone] = useState("")
+  const [otpCode, setOtpCode] = useState("")
+  const [otpStep, setOtpStep] = useState<"phone" | "code">("phone")
+  const [otpLoading, setOtpLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -42,7 +48,7 @@ const [forgotSent, setForgotSent] = useState(false)
       const data =
         mode === "signin"
           ? await loginRequest({ email, password })
-          : await registerRequest({ name, email, phone: phone || undefined, password, role: "OWNER" })
+          : await registerRequest({ name, email, phone, password, role: "OWNER" })
 
       setAuth({
         accessToken: data.token,
@@ -73,6 +79,42 @@ const [forgotSent, setForgotSent] = useState(false)
       toast.error(err?.response?.data?.message || "Failed to send reset link")
     } finally {
       setForgotLoading(false)
+    }
+  }
+
+  const handleSendOtp = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setOtpLoading(true)
+    try {
+      await sendOtpRequest(otpPhone)
+      setOtpStep("code")
+      toast.success("OTP sent!")
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Failed to send OTP")
+    } finally {
+      setOtpLoading(false)
+    }
+  }
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setOtpLoading(true)
+    try {
+      const data = await verifyOtpRequest(otpPhone, otpCode)
+      setAuth({
+        accessToken: data.token,
+        refreshToken: data.refreshToken,
+        userId: data.userId,
+        name: data.name,
+        email: data.email,
+        role: data.role,
+      })
+      toast.success("Welcome!")
+      navigate("/")
+    } catch (err: any) {
+      toast.error(err?.response?.data?.message || "Invalid or expired OTP")
+    } finally {
+      setOtpLoading(false)
     }
   }
 
@@ -164,13 +206,14 @@ const [forgotSent, setForgotSent] = useState(false)
               </div>
               {mode === "signup" && (
                 <div className="space-y-1.5">
-                  <Label htmlFor="phone">Phone (optional)</Label>
+                  <Label htmlFor="phone">Phone Number</Label>
                   <Input
                     id="phone"
                     type="tel"
-                    placeholder="9876543210"
+                    placeholder="+919876543210"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
+                    required
                   />
                 </div>
               )}
@@ -206,20 +249,87 @@ const [forgotSent, setForgotSent] = useState(false)
                     : "Create Account"}
               </Button>
               {mode === "signin" && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setForgotOpen(true)
-                    setForgotSent(false)
-                    setForgotEmail(email)
-                  }}
-                  className="w-full text-center text-xs text-muted-foreground hover:text-foreground hover:underline"
-                >
-                  Forgot password?
-                </button>
+                <div className="flex items-center justify-between text-xs">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setForgotOpen(true)
+                      setForgotSent(false)
+                      setForgotEmail(email)
+                    }}
+                    className="text-muted-foreground hover:text-foreground hover:underline"
+                  >
+                    Forgot password?
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setUseOtp(true)
+                      setOtpStep("phone")
+                    }}
+                    className="text-muted-foreground hover:text-foreground hover:underline"
+                  >
+                    Sign in with OTP
+                  </button>
+                </div>
               )}
             </motion.form>
           </AnimatePresence>
+
+          {mode === "signin" && useOtp && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              className="mt-4 border-t border-border/60 pt-4"
+            >
+              {otpStep === "phone" ? (
+                <form onSubmit={handleSendOtp} className="space-y-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="otpPhone">Phone Number</Label>
+                    <Input
+                      id="otpPhone"
+                      type="tel"
+                      placeholder="+919876543210"
+                      value={otpPhone}
+                      onChange={(e) => setOtpPhone(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button type="submit" className="flex-1" disabled={otpLoading}>
+                      {otpLoading ? "Sending..." : "Send OTP"}
+                    </Button>
+                    <Button type="button" variant="outline" onClick={() => setUseOtp(false)}>
+                      Cancel
+                    </Button>
+                  </div>
+                </form>
+              ) : (
+                <form onSubmit={handleVerifyOtp} className="space-y-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="otpCode">Enter OTP sent to {otpPhone}</Label>
+                    <Input
+                      id="otpCode"
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="6-digit code"
+                      value={otpCode}
+                      onChange={(e) => setOtpCode(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button type="submit" className="flex-1" disabled={otpLoading}>
+                      {otpLoading ? "Verifying..." : "Verify & Sign In"}
+                    </Button>
+                    <Button type="button" variant="outline" onClick={() => setOtpStep("phone")}>
+                      Back
+                    </Button>
+                  </div>
+                </form>
+              )}
+            </motion.div>
+          )}
         </div>
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
