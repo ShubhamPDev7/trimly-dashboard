@@ -2,6 +2,7 @@ import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { motion, AnimatePresence } from "framer-motion"
 import { Eye, EyeOff, Scissors } from "lucide-react"
+import PhoneInput from "@/components/shared/PhoneInput"
 import { loginRequest, registerRequest, forgotPasswordRequest } from "@/api/auth"
 import { sendOtpRequest, verifyOtpRequest } from "@/api/otp"
 import {
@@ -207,14 +208,7 @@ const [useOtp, setUseOtp] = useState(false)
               {mode === "signup" && (
                 <div className="space-y-1.5">
                   <Label htmlFor="phone">Phone Number</Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    placeholder="+919876543210"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    required
-                  />
+                  <PhoneInput id="phone" value={phone} onChange={setPhone} required />
                 </div>
               )}
               <div className="space-y-1.5">
@@ -286,14 +280,7 @@ const [useOtp, setUseOtp] = useState(false)
                 <form onSubmit={handleSendOtp} className="space-y-3">
                   <div className="space-y-1.5">
                     <Label htmlFor="otpPhone">Phone Number</Label>
-                    <Input
-                      id="otpPhone"
-                      type="tel"
-                      placeholder="+919876543210"
-                      value={otpPhone}
-                      onChange={(e) => setOtpPhone(e.target.value)}
-                      required
-                    />
+                    <PhoneInput id="otpPhone" value={otpPhone} onChange={setOtpPhone} required />
                   </div>
                   <div className="flex gap-2">
                     <Button type="submit" className="flex-1" disabled={otpLoading}>

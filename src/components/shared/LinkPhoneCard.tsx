@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "sonner"
 import { CheckCircle2 } from "lucide-react"
+import PhoneInput from "@/components/shared/PhoneInput"
 
 export default function LinkPhoneCard() {
   const setAuth = useAuthStore((s) => s.setAuth)
@@ -98,13 +99,7 @@ export default function LinkPhoneCard() {
               <form onSubmit={handleSendOtp} className="flex flex-col gap-2 sm:flex-row">
                 <div className="flex-1 space-y-1.5">
                   <Label>Phone Number</Label>
-                  <Input
-                    type="tel"
-                    placeholder="+919876543210"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    required
-                  />
+                  <PhoneInput value={phone} onChange={setPhone} required />
                 </div>
                 <Button type="submit" disabled={loading} className="sm:self-end">
                   {loading ? "Sending..." : "Send OTP"}
